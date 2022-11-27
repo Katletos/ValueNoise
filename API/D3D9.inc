@@ -1,26 +1,24 @@
-import d3d9,\  
-     Direct3DCreate9, 'Direct3DCreate9'
-
+import    d3d9,\
+          Direct3DCreate9, 'Direct3DCreate9'
 
 interface IDirect3D9,\
-     QueryInterface,\
-     AddRef,\
-     Release,\
-     RegisterSoftwareDevice,\
-     GetAdapterCount,\
-     GetAdapterIdentifier,\
-     GetAdapterModeCount,\
-     EnumAdapterModes,\
-     GetAdapterDisplayMode,\
-     CheckDeviceType,\
-     CheckDeviceFormat,\
-     CheckDeviceMultiSampleType,\
-     CheckDepthStencilMatch,\
-     CheckDeviceFormatConversion,\
-     GetDeviceCaps,\
-     GetAdapterMonitor,\
-     CreateDevice
-
+          QueryInterface,\
+          AddRef,\
+          Release,\
+          RegisterSoftwareDevice,\
+          GetAdapterCount,\
+          GetAdapterIdentifier,\
+          GetAdapterModeCount,\
+          EnumAdapterModes,\
+          GetAdapterDisplayMode,\
+          CheckDeviceType,\
+          CheckDeviceFormat,\
+          CheckDeviceMultiSampleType,\
+          CheckDepthStencilMatch,\
+          CheckDeviceFormatConversion,\
+          GetDeviceCaps,\
+          GetAdapterMonitor,\
+          CreateDevice
 
 interface IDirect3DDevice9,\
           QueryInterface,\
@@ -142,3 +140,35 @@ interface IDirect3DDevice9,\
           DrawTriPatch,\
           DeletePatch,\
           CreateQuery
+
+interface IDirect3DVertexBuffer9,\
+          QueryInterface,\
+          AddRef,\
+          Release,\
+          GetDevice,\
+          SetPrivateData,\
+          GetPrivateData,\
+          FreePrivateData,\
+          SetPriority,\
+          GetPriority,\
+          PreLoad,\
+          GetType,\
+          Lock,\
+          Unlock,\
+          GetDesc
+
+interface IDirect3DIndexBuffer9,\
+          QueryInterface,\
+          AddRef,\
+          Release,\
+          GetDevice,\
+          SetPrivateData,\
+          GetPrivateData,\
+          FreePrivateData,\
+          SetPriority,\
+          GetPriority,\
+          PreLoad,\
+          GetType,\
+          Lock,\
+          Unlock,\
+          GetDesc

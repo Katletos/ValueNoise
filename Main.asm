@@ -1,77 +1,91 @@
 format PE GUI 4.0
 entry WinMain
 include 'win32w.inc'
-        
+
 proc WinMain
-     locals
-        Msg             MSG
-        pD3D            dd      ?
-        pD3DDevice      dd      ?
-        EDIT            du  'EDIT', 0
-     endl
+        xor     ebx, ebx
+        invoke  RegisterClassExW, DemoWindow.wcexClass
+        invoke  ShowCursor, ebx
+        invoke  CreateWindowExW, ebx, DemoWindow.szClassName, ebx,\
+                                 WS_POPUP or WS_VISIBLE or WS_MAXIMIZE,\
+                                 ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
 
-     ;Use standard lpClassName
-     xor     ebx, ebx
-     lea edx, [EDIT]
-     ;Create window
-     invoke  CreateWindowEx, ebx, edx, ebx, WS_POPUP or WS_MAXIMIZE or WS_VISIBLE,\
-                             ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
-     ;Hide cursor
-     invoke  ShowCursor, ebx
+        include '%myinclude%\code\initdevice.c'
+        include '%myinclude%\code\initbuffer.c'
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        ;init random
+        stdcall Random.Init
+        mov     ecx, 255
+        xor     edx, edx
+.RndLoop:
 
-     mov     esi, eax
-     invoke  Direct3DCreate9, D3D_SDK_VERSION
-     mov     [pD3D], eax
-     lea     edx, [pD3DDevice]
-;     comcall eax, IDirect3D9, CreateDevice, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, esi,\
-;                                            D3DCREATE_HARDWARE_VERTEXPROCESSING, d3dppDemo,\
-;                                            edx
+        stdcall Random.Get, 1, 256
+        mov     [pRandomData + edx * 4] , eax
+        inc     edx
+        loop .RndLoop
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-     ;Chose vertex format
-;     comcall    [pD3DDevice], IDirect3DDevice9, SetFVF, D3DFVF_XYZRHW
-
-     lea     edi, [Msg]
+        lea     edi, [Msg]
 .MsgLoop:
-     invoke  PeekMessage, edi, ebx, ebx, ebx, PM_REMOVE
-     test    eax, eax
-     jnz     .ProcessMessage
-;     comcall [pD3DDevice], IDirect3DDevice9, BeginScene
-;     comcall [pD3DDevice], IDirect3DDevice9, DrawPrimitiveUP,\
-;                                           D3DPT_TRIANGLELIST, 2, Quad, sizeof.TVertex
-;     comcall [pD3DDevice], IDirect3DDevice9, Present, ebx, ebx, ebx, ebx
-;     comcall [pD3DDevice], IDirect3DDevice9, EndScene
-     jmp     .MsgLoop
-.ProcessMessage:
-     cmp     [Msg.message], WM_QUIT
-     je      .EndMsgLoop
-     invoke  DispatchMessage, edi
-     jmp     .MsgLoop
+        invoke  PeekMessage, edi, ebx, ebx, ebx, PM_REMOVE
+        test    eax, eax
+        jz      .MsgLoop
+        invoke  TranslateMessage, edi
+        invoke  DispatchMessage, edi
+        jmp     .MsgLoop
 .EndMsgLoop:
-     comcall [pD3DDevice], IDirect3DDevice9, Release
-     comcall [pD3D], IDirect3D9, Release
-     invoke  ExitProcess, ebx
 endp
 
 
+proc DemoWindow.WindowProc uses ebx esi edi,\
+                           hWnd, uMsg, wParam, lParam
+        xor     ebx, ebx
 
+        mov     eax, [uMsg]
+
+        cmp     eax, WM_CREATE
+        je      .Create
+        cmp     eax, WM_PAINT
+        je      .Paint
+        cmp     eax, WM_KEYDOWN
+        je      .KeyDown
+        cmp     eax, WM_DESTROY
+        je      .Destroy
+
+        invoke  DefWindowProc, [hWnd], [uMsg], [wParam], [lParam]
+        jmp     .Return
+
+.Create:
+        ;move here inits
+       ; include '%myinclude%\code\initdevice.c'
+       ; include '%myinclude%\code\initbuffer.c'
+        jmp     .ReturnZero
+.Paint:
+        include '%myinclude%\code\paint.c'
+        invoke  InvalidateRect, [hWnd], ebx, ebx
+        jmp     .ReturnZero
+.KeyDown:
+        cmp     [wParam], VK_ESCAPE
+        jne     .ReturnZero
+.Destroy:
+        comcall [pD3D], IDirect3D9, Release
+        comcall [pD3DDevice], IDirect3DDevice9, Release
+        comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+        invoke  ExitProcess, ebx
+.ReturnZero:
+        xor     eax, eax
+.Return:
+        ret
+endp
+
+Msg             MSG
+pD3D            dd      ?
+pD3DDevice      dd      ?
+include          '%myinclude%\data\initdevice.d'
+include          '%myinclude%\data\initbuffer.d'
+include          '%myinclude%\random\random.d'
+include          '%myinclude%\random\random.c'
 data import
-
-                  struct TVertex
-       x        dd      ?
-       y        dd      ?
-       z        dd      ?
-       rhw      dd      ?
-     ends
-
-      Quad   TVertex                 100.0, 100.0, 0.0, 1.0
-       TVertex                 200.0, 100.0, 0.0, 1.0
-       TVertex                 200.0, 200.0, 0.0, 1.0
-       TVertex                 200.0, 200.0, 0.0, 1.0
-       TVertex                 100.0, 200.0, 0.0, 1.0
-       TVertex                 100.0, 100.0, 0.0, 1.0
-
-
-
         library kernel32, 'kernel32.dll',\
                 gdi32,    'gdi32.dll',\
                 user32,   'user32.dll',\
@@ -84,3 +98,91 @@ data import
         
         include '%myinclude%\EQUATES\d3d9.inc'
 end data
+
+
+
+
+
+;EyeV     dd      ?
+;AtV      dd      ?
+;UpV      dd      ?
+
+;fovY     dd      ?
+;Aspect   dd      ?
+
+
+;ToScreenCoordinates     w       0       0               0
+;                        0       h       0               0
+;                        0       0       zf/(zf-zn)      1
+;                        0       0       -zn*zf/(zf-zn)  0
+
+;h = ctg(fovY/2)
+;w = h / Aspect
+
+
+ImageBase = $ - rva $
+nil       = 0
+
+DemoWindow.szClassName    du              'Demo', 0
+DemoWindow.wcexClass      WNDCLASSEX      sizeof.WNDCLASSEX, CS_GLOBALCLASS,\
+                                          DemoWindow.WindowProc, 0, 0, ImageBase,\
+                                          0, 0, 0, nil, DemoWindow.szClassName, 0
+
+
+d3dppDemo       D3DPRESENT_PARAMETERS   0, 0, D3DFMT_UNKNOWN, 0, D3DMULTISAMPLE_NONE,\
+                                        0, D3DSWAPEFFECT_DISCARD, 0, TRUE, FALSE,\
+                                        D3DFMT_UNKNOWN, 0, 0, 0
+
+
+struct D3DMATRIX
+       _11      dd      ?
+       _12      dd      ?
+       _13      dd      ?
+       _14      dd      ?
+       _21      dd      ?
+       _22      dd      ?
+       _23      dd      ?
+       _24      dd      ?
+       _31      dd      ?
+       _32      dd      ?
+       _33      dd      ?
+       _34      dd      ?
+       _41      dd      ?
+       _42      dd      ?
+       _43      dd      ?
+       _44      dd      ?
+ends
+
+;D3DTS_VIEW              = 2
+;D3DTS_PROJECTION        = 3
+;D3DTS_WORLD             = 256
+
+
+
+
+struct TVertex
+       x        dd      ?
+       y        dd      ?
+       z        dd      ?
+       rhw      dd      ?
+       color    dd      ?
+ends
+
+Quad            TVertex                 100.0, 100.0, 0.0, 1.0, $00292929
+                TVertex                 200.0, 100.0, 0.0, 1.0, $00262626
+                TVertex                 200.0, 200.0, 0.0, 1.0, $00404040
+                TVertex                 200.0, 200.0, 0.0, 1.0, $00404040
+                TVertex                 100.0, 200.0, 0.0, 1.0, $00454545
+                TVertex                 100.0, 100.0, 0.0, 1.0, $00292929
+VertexCount     = ($ - Quad) / sizeof.TVertex
+
+TVertex.FVF = D3DFVF_XYZRHW or D3DFVF_DIFFUSE
+
+;zaxis = normal(At – Eye)
+;xaxis = normal(cross(Up, zaxis))
+;yaxis = cross(zaxis, xaxis)
+
+;WorldAxis       xaxis.x           yaxis.x           zaxis.x           0
+;                xaxis.y           yaxis.y           zaxis.y           0
+;                xaxis.z           yaxis.z           zaxis.z           0
+;                -dot(xaxis, eye)  -dot(yaxis, eye)  -dot(zaxis, eye)  1
