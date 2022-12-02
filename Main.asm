@@ -3,75 +3,63 @@ entry WinMain
 include 'win32w.inc'
 
 proc WinMain
-        xor     ebx, ebx
-        invoke  RegisterClassExW, DemoWindow.wcexClass
-        invoke  ShowCursor, ebx
-        invoke  CreateWindowExW, ebx, DemoWindow.szClassName, ebx,\
-                                 WS_POPUP or WS_VISIBLE or WS_MAXIMIZE,\
-                                 ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
+    xor     ebx, ebx
+    invoke  RegisterClassExW, DemoWindow.wcexClass
+    invoke  ShowCursor, ebx
+    invoke  CreateWindowExW, ebx, DemoWindow.szClassName, ebx,\
+                             WS_POPUP or WS_VISIBLE or WS_MAXIMIZE,\
+                             ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
 
-        include '%myinclude%\code\initdevice.c'
-        include '%myinclude%\code\initbuffer.c'
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;init random
-        stdcall Random.Init
-        mov     ecx, 255
-        xor     edx, edx
-.RndLoop:
+    include '%myinclude%\code\initdevice.c'
+    include '%myinclude%\code\initbuffer.c'
 
-        stdcall Random.Get, 1, 256
-        mov     [pRandomData + edx * 4] , eax
-        inc     edx
-        loop .RndLoop
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-        lea     edi, [Msg]
+    lea     edi, [Msg]
 .MsgLoop:
-        invoke  PeekMessage, edi, ebx, ebx, ebx, PM_REMOVE
-        test    eax, eax
-        jz      .MsgLoop
-        invoke  TranslateMessage, edi
-        invoke  DispatchMessage, edi
-        jmp     .MsgLoop
+    invoke  PeekMessage, edi, ebx, ebx, ebx, PM_REMOVE
+    test    eax, eax
+    jz      .MsgLoop
+    invoke  TranslateMessage, edi
+    invoke  DispatchMessage, edi
+    jmp     .MsgLoop
 .EndMsgLoop:
 endp
 
 
 proc DemoWindow.WindowProc uses ebx esi edi,\
                            hWnd, uMsg, wParam, lParam
-        xor     ebx, ebx
+    xor     ebx, ebx
+    mov     eax, [uMsg]
 
-        mov     eax, [uMsg]
+    cmp     eax, WM_CREATE
+    je      .Create
+    cmp     eax, WM_PAINT
+    je      .Paint
+    cmp     eax, WM_KEYDOWN
+    je      .KeyDown
+    cmp     eax, WM_DESTROY
+    je      .Destroy
 
-        cmp     eax, WM_CREATE
-        je      .Create
-        cmp     eax, WM_PAINT
-        je      .Paint
-        cmp     eax, WM_KEYDOWN
-        je      .KeyDown
-        cmp     eax, WM_DESTROY
-        je      .Destroy
-
-        invoke  DefWindowProc, [hWnd], [uMsg], [wParam], [lParam]
-        jmp     .Return
+    invoke  DefWindowProc, [hWnd], [uMsg], [wParam], [lParam]
+    jmp     .Return
 
 .Create:
         ;move here inits
        ; include '%myinclude%\code\initdevice.c'
        ; include '%myinclude%\code\initbuffer.c'
-        jmp     .ReturnZero
+    jmp     .ReturnZero
 .Paint:
-        include '%myinclude%\code\paint.c'
-        invoke  InvalidateRect, [hWnd], ebx, ebx
-        jmp     .ReturnZero
+    include '%myinclude%\code\paint.c'
+       ; invoke  InvalidateRect, [hWnd], ebx, ebx
+    jmp     .ReturnZero
 .KeyDown:
-        cmp     [wParam], VK_ESCAPE
-        jne     .ReturnZero
+    cmp     [wParam], VK_ESCAPE
+    jne     .ReturnZero
 .Destroy:
-        comcall [pD3D], IDirect3D9, Release
-        comcall [pD3DDevice], IDirect3DDevice9, Release
-        comcall [pVBuffer], IDirect3DVertexBuffer9, Release
-        invoke  ExitProcess, ebx
+    comcall [pD3D], IDirect3D9, Release
+    comcall [pD3DDevice], IDirect3DDevice9, Release
+    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+    invoke  ExitProcess, ebx
 .ReturnZero:
         xor     eax, eax
 .Return:
@@ -79,8 +67,7 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
 endp
 
 Msg             MSG
-pD3D            dd      ?
-pD3DDevice      dd      ?
+
 include          '%myinclude%\data\initdevice.d'
 include          '%myinclude%\data\initbuffer.d'
 include          '%myinclude%\random\random.d'
@@ -129,9 +116,6 @@ DemoWindow.wcexClass      WNDCLASSEX      sizeof.WNDCLASSEX, CS_GLOBALCLASS,\
                                           0, 0, 0, nil, DemoWindow.szClassName, 0
 
 
-d3dppDemo       D3DPRESENT_PARAMETERS   0, 0, D3DFMT_UNKNOWN, 0, D3DMULTISAMPLE_NONE,\
-                                        0, D3DSWAPEFFECT_DISCARD, 0, TRUE, FALSE,\
-                                        D3DFMT_UNKNOWN, 0, 0, 0
 
 
 struct D3DMATRIX
