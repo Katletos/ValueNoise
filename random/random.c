@@ -1,5 +1,3 @@
-;include 'macro\proc32.inc'
-
 proc    Random.Init
 
         invoke  GetTickCount
@@ -54,4 +52,3 @@ proc    Random.GetFloat uses edx
 
         ret
 endp
-

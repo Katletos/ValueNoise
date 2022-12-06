@@ -10,7 +10,7 @@ proc grad,\
      movzx edx, dl
      sub   edx, eax
      mov   eax, edx
-     mov   edx, [ecx+eax*4]
+     mov   edx, [ecx + eax * 4]
      mov   eax, [x]
      add   edx, eax
      mov   eax, edx
@@ -20,7 +20,7 @@ proc grad,\
      movzx edx, dl
      sub   edx, eax
      mov   eax, edx
-     mov   eax, [ecx+eax*4]
+     mov   eax, [ecx + eax * 4]
      ret
 endp
 
@@ -124,13 +124,13 @@ proc noise2d,\
      push   DWORD [ebp-40]
      push   DWORD [ebp-36]
      call   smooth_inter
+     add    esp,  52
      ret
 endp
 
 ;;   return value on fpu stack
 proc perlin2d,\
      x, y, freq, depth
-
      sub    esp, 32
      fld    DWORD [x]
      fmul   DWORD [freq]
@@ -180,5 +180,6 @@ proc perlin2d,\
 
      fld    DWORD [ebp-16]
      fdiv   DWORD [ebp-20]
+     add    esp,  32
      ret
 endp

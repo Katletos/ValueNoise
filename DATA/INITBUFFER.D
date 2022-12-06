@@ -1,4 +1,5 @@
 pVBuffer          dd      ?
-pBufData          dd      ?
+pIBuffer          dd      ?
+pVBufData         dd      ?
+pIBufData         dd      ?
 pRandomData       dd      ?
-pVertexData       dd      ?

@@ -173,3 +173,7 @@ D3DLOCK_NOOVERWRITE                     = $00001000
 D3DLOCK_NOSYSLOCK                       = $00000800
 D3DLOCK_DONOTWAIT                       = $00004000
 D3DLOCK_NO_DIRTY_UPDATE                 = $00008000
+
+
+D3DFMT_INDEX16              =101
+D3DFMT_INDEX32              =102

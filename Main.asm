@@ -9,10 +9,13 @@ proc WinMain
     invoke  CreateWindowExW, ebx, DemoWindow.szClassName, ebx,\
                              WS_POPUP or WS_VISIBLE or WS_MAXIMIZE,\
                              ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
-
-    include '%myinclude%\code\initdevice.c'
-    include '%myinclude%\code\initbuffer.c'
-
+    mov     [hwndDesc], eax
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    stdcall    InitDevice
+    stdcall    InitRandomData
+    stdcall    InitVBuffer
+    stdcall    InitIBuffer
+    ;;;;;;;;;;;;;;;;;;;;;;;;
     lea     edi, [Msg]
 .MsgLoop:
     invoke  PeekMessage, edi, ebx, ebx, ebx, PM_REMOVE
@@ -43,22 +46,51 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
     jmp     .Return
 
 .Create:
-        ;move here inits
-       ; include '%myinclude%\code\initdevice.c'
-       ; include '%myinclude%\code\initbuffer.c'
+;    call    InitDevice
+;    call    InitRandomData
+;    call    InitVBuffer
+
     jmp     .ReturnZero
 .Paint:
-    include '%myinclude%\code\paint.c'
-       ; invoke  InvalidateRect, [hWnd], ebx, ebx
+    call    Paint
+    invoke  InvalidateRect, [hWnd], ebx, ebx
     jmp     .ReturnZero
 .KeyDown:
+    cmp     [wParam], VK_LEFT
+    je      .Left
+    cmp     [wParam], VK_UP
+    je      .Up
+    cmp     [wParam], VK_RIGHT
+    je      .Right
+    cmp     [wParam], VK_DOWN
+    je      .Down
     cmp     [wParam], VK_ESCAPE
+    je      .Destroy
     jne     .ReturnZero
+
+.Left:
+    finit
+    fld     [freq]
+    fsub    [delta]
+    fst     [freq]
+    jmp     .ReturnZero
+.Up:
+    add     [depth], 1
+    jmp     .ReturnZero
+.Right:
+    finit
+    fld     [freq]
+    fadd    [delta]
+    fst     [freq]
+    jmp     .ReturnZero
+.Down:
+    sub     [depth], 1
+    jmp     .ReturnZero
+
 .Destroy:
     comcall [pD3D], IDirect3D9, Release
-    comcall [pD3DDevice], IDirect3DDevice9, Release
-    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
-    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+;    comcall [pD3DDevice], IDirect3DDevice9, Release
+;    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
     invoke  ExitProcess, ebx
 .ReturnZero:
         xor     eax, eax
@@ -66,10 +98,18 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
         ret
 endp
 
+
+hwndDesc        dd      ?
 Msg             MSG
+
+include '%myinclude%\code\initdevice.c'
+include '%myinclude%\code\initbuffer.c'
+include '%myinclude%\code\paint.c'
 
 include          '%myinclude%\data\initdevice.d'
 include          '%myinclude%\data\initbuffer.d'
+include          '%myinclude%\data\perlinnoise.d'
+include          '%myinclude%\code\perlinnoise.c'
 include          '%myinclude%\random\random.d'
 include          '%myinclude%\random\random.c'
 data import
@@ -84,9 +124,8 @@ data import
         include '%myinclude%\API\d3d9.inc'
         
         include '%myinclude%\EQUATES\d3d9.inc'
+
 end data
-
-
 
 
 
@@ -112,11 +151,12 @@ nil       = 0
 
 DemoWindow.szClassName    du              'Demo', 0
 DemoWindow.wcexClass      WNDCLASSEX      sizeof.WNDCLASSEX, CS_GLOBALCLASS,\
-                                          DemoWindow.WindowProc, 0, 0, ImageBase,\
-                                          0, 0, 0, nil, DemoWindow.szClassName, 0
+                                                  DemoWindow.WindowProc, 0, 0, ImageBase,\
+                                                  0, 0, 0, nil, DemoWindow.szClassName, 0
 
-
-
+d3dppDemo       D3DPRESENT_PARAMETERS     0, 0, D3DFMT_UNKNOWN, 0, D3DMULTISAMPLE_NONE,\
+                                          0, D3DSWAPEFFECT_DISCARD, 0, TRUE, FALSE,\
+                                          D3DFMT_UNKNOWN, 0, 0, 0
 
 struct D3DMATRIX
        _11      dd      ?
@@ -137,13 +177,6 @@ struct D3DMATRIX
        _44      dd      ?
 ends
 
-;D3DTS_VIEW              = 2
-;D3DTS_PROJECTION        = 3
-;D3DTS_WORLD             = 256
-
-
-
-
 struct TVertex
        x        dd      ?
        y        dd      ?
@@ -152,13 +185,27 @@ struct TVertex
        color    dd      ?
 ends
 
-Quad            TVertex                 100.0, 100.0, 0.0, 1.0, $00292929
-                TVertex                 200.0, 100.0, 0.0, 1.0, $00262626
-                TVertex                 200.0, 200.0, 0.0, 1.0, $00404040
-                TVertex                 200.0, 200.0, 0.0, 1.0, $00404040
-                TVertex                 100.0, 200.0, 0.0, 1.0, $00454545
-                TVertex                 100.0, 100.0, 0.0, 1.0, $00292929
-VertexCount     = ($ - Quad) / sizeof.TVertex
+struct D3DVECTOR
+       x        dd      ?
+       y        dd      ?
+       z        dd      ?
+ends
+
+vecEye          D3DVECTOR               0.0, 0.0, -5.0
+vecAt           D3DVECTOR               0.0, 0.0, 0.0
+vecUp           D3DVECTOR               0.0, 1.0, 0.0
+
+matWorld        D3DMATRIX
+matView         D3DMATRIX
+matProj         D3DMATRIX
+
+;Quad           TVertex                 100.0, 100.0, 0.0, 1.0
+;               TVertex                 200.0, 100.0, 0.0, 1.0
+;               TVertex                 200.0, 200.0, 0.0, 1.0
+;               TVertex                 200.0, 200.0, 0.0, 1.0
+;               TVertex                 100.0, 200.0, 0.0, 1.0
+;               TVertex                 100.0, 100.0, 0.0, 1.0
+
 
 TVertex.FVF = D3DFVF_XYZRHW or D3DFVF_DIFFUSE
 
