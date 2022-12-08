@@ -68,8 +68,8 @@ proc  WriteVertexes
     fld1
     fstp    DWORD [edx + TVertex.rhw]
 
-    mov     eax, [two]
-    mov     ecx, [two]
+   ; mov     eax, [two]
+   ; mov     ecx, [two]
     ;stdcall perlin2d, eax, ecx, [freq], [depth]
     stdcall  Random.GetFloat
     push    eax
@@ -84,7 +84,7 @@ proc  WriteVertexes
     add     eax, ecx
     or      eax, $00000000
 
-    mov     DWORD [edx + TVertex.color], eax
+    mov     DWORD [edx + TVertex.color], $FFFFFFFF
 
     add     edx, sizeof.TVertex
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -161,12 +161,12 @@ proc WriteIndexes
 .WhileCmp:
      cmp        [x], 81
      jle  .WhileBody
-     ;jmp .penis
+     ;jmp .fuck
 .penis2:
 ;;;;;;;;;;;
  ;    mov        edx, [pIBufData]
      ;xor        eax, eax
-     ;jmp         .penis
+     ;jmp         .fuck
      mov        [x], 1
      jmp .WhileCmp1
 .WhileBody1:
@@ -192,8 +192,6 @@ proc WriteIndexes
 .WhileCmp1:
      cmp        [x], 82;81
      jl  .WhileBody1
-.penis:
+.fuck:
      ret
 endp
-
-

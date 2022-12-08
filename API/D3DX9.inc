@@ -1,0 +1,10 @@
+        import  d3dx9,\
+                D3DXMatrixLookAtLH, 'D3DXMatrixLookAtLH',\
+                D3DXMatrixLookAtRH, 'D3DXMatrixLookAtRH',\
+                D3DXMatrixMultiply, 'D3DXMatrixMultiply',\
+                D3DXMatrixMultiplyTranspose, 'D3DXMatrixMultiplyTranspose',\
+                D3DXMatrixOrthoLH, 'D3DXMatrixOrthoLH',\
+                D3DXMatrixOrthoOffCenterLH, 'D3DXMatrixOrthoOffCenterLH',\
+                D3DXMatrixOrthoOffCenterRH, 'D3DXMatrixOrthoOffCenterRH',\
+                D3DXMatrixOrthoRH, 'D3DXMatrixOrthoRH',\
+                           D3DXMatrixPerspectiveFovLH, 'D3DXMatrixPerspectiveFovLH'

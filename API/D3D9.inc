@@ -1,4 +1,4 @@
-import    d3d9,\
+    import    d3d9,\
           Direct3DCreate9, 'Direct3DCreate9'
 
 interface IDirect3D9,\
@@ -10,7 +10,7 @@ interface IDirect3D9,\
           GetAdapterIdentifier,\
           GetAdapterModeCount,\
           EnumAdapterModes,\
-          GetAdapterDisplayMode,\
+          GetAdapterDisplayMode,\   
           CheckDeviceType,\
           CheckDeviceFormat,\
           CheckDeviceMultiSampleType,\

@@ -177,3 +177,60 @@ D3DLOCK_NO_DIRTY_UPDATE                 = $00008000
 
 D3DFMT_INDEX16              =101
 D3DFMT_INDEX32              =102
+
+
+
+
+
+
+
+
+
+
+D3DFVF_RESERVED0                        = $0001
+D3DFVF_POSITION_MASK                    = $400E
+D3DFVF_XYZ                              = $0002
+D3DFVF_XYZRHW                           = $0004
+D3DFVF_XYZB1                            = $0006
+D3DFVF_XYZB2                            = $0008
+D3DFVF_XYZB3                            = $000A
+D3DFVF_XYZB4                            = $000C
+D3DFVF_XYZB5                            = $000E
+D3DFVF_XYZW                             = $4002
+D3DFVF_NORMAL                           = $0010
+D3DFVF_PSIZE                            = $0020
+D3DFVF_DIFFUSE                          = $0040
+D3DFVF_SPECULAR                         = $0080
+D3DFVF_TEXCOUNT_MASK                    = $0F00
+D3DFVF_TEXCOUNT_SHIFT                   = 8
+D3DFVF_TEX0                             = $0000
+D3DFVF_TEX1                             = $0100
+D3DFVF_TEX2                             = $0200
+D3DFVF_TEX3                             = $0300
+D3DFVF_TEX4                             = $0400
+D3DFVF_TEX5                             = $0500
+D3DFVF_TEX6                             = $0600
+D3DFVF_TEX7                             = $0700
+D3DFVF_TEX8                             = $0800
+D3DFVF_LASTBETA_UBYTE4                  = $1000
+D3DFVF_LASTBETA_D3DCOLOR                = $8000
+D3DFVF_RESERVED2                        = $6000
+
+D3DRS_ZENABLE                           = 7
+D3DRS_FILLMODE                          = 8
+D3DRS_SHADEMODE                         = 9
+D3DRS_CULLMODE                          = 22
+D3DRS_POINTSIZE                         = 154
+D3DRS_LIGHTING                          = 137
+
+D3DFILL_POINT                           = 1
+D3DFILL_WIREFRAME                       = 2
+D3DFILL_SOLID                           = 3
+
+D3DCULL_NONE            = 1
+D3DCULL_CW              = 2
+D3DCULL_CCW             = 3
+
+D3DTS_VIEW              = 2
+D3DTS_PROJECTION        = 3
+D3DTS_WORLD             = 256

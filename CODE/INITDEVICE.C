@@ -11,9 +11,13 @@ proc InitDevice
      D3DRS_LIGHTING = 137
      D3DRS_CULLMODE = 22
      D3DCULL_NONE = 1
-     comcall    [pD3DDevice], IDirect3DDevice9, SetRenderState, D3DRS_LIGHTING, 0
-     comcall    [pD3DDevice], IDirect3DDevice9, SetRenderState, D3DRS_CULLMODE, D3DCULL_NONE
+   ;  comcall    [pD3DDevice], IDirect3DDevice9, SetRenderState, D3DRS_LIGHTING, 0
+   ;  comcall    [pD3DDevice], IDirect3DDevice9, SetRenderState, D3DRS_CULLMODE, D3DCULL_NONE
 
+   ;  invoke     D3DXMatrixLookAtLH, matView, vecEye, vecAt, vecUp
+   ;  comcall    [pD3DDevice], IDirect3DDevice9, SetTransform, D3DTS_VIEW, matView
+   ;  invoke     D3DXMatrixPerspectiveFovLH, matProj, 1.57, 1.0, 1.0, 100.0
+   ;  comcall    [pD3DDevice], IDirect3DDevice9, SetTransform, D3DTS_PROJECTION, matProj
 
      ;d3ddev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
      ret
