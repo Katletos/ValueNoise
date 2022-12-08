@@ -1,4 +1,4 @@
-proc grad,\
+proc grad uses ecx edx,\
      x, y
 
      mov   ecx, [pRandomData]
@@ -27,6 +27,7 @@ endp
 proc smooth_inter,\
      x, y, s
 
+     finit
      fld   DWORD [s]
      fmul  st, st0
      fmul  DWORD [s]
@@ -43,143 +44,143 @@ proc smooth_inter,\
      fsub  DWORD  [x]
      fmulp st1, st
      fadd  DWORD  [x]
+
+     push  eax
+     fstp  DWORD [esp]
+     pop   eax
      ret
 endp
 
 proc noise2d,\
-     x, y
+     x, y   ;both float, return float in eax
 
-     sub    esp, 52
-     fld    DWORD [ebp+8]
-     fnstcw WORD [ebp-50]
-     movzx  eax, WORD [ebp-50]
-     or     ah, 12
-     mov    WORD  [ebp-52], ax
-     fldcw  WORD  [ebp-52]
-     fistp  DWORD [ebp-4]
-     fldcw  WORD  [ebp-50]
-     fld    DWORD [ebp+12]
-     fldcw  WORD  [ebp-52]
-     fistp  DWORD [ebp-8]
-     fldcw  WORD  [ebp-50]
-     fild   DWORD [ebp-4]
-     fld    DWORD [ebp+8]
-     fsubrp st1, st
-     fstp   DWORD [ebp-12]
-     fild   DWORD [ebp-8]
-     fld    DWORD [ebp+12]
-     fsubrp st1, st
-     fstp   DWORD [ebp-16]
-     push   DWORD [ebp-8]
-     push   DWORD [ebp-4]
-     call   grad
+     locals
+        x_int   dd      ?
+        y_int   dd      ?
+        x_int1  dd      ?
+        y_int1  dd      ?
+        x_frac  dd      ?
+        y_frac  dd      ?
+        s       dd      ?
+        t       dd      ?
+        u       dd      ?
+        v       dd      ?
+        low     dd      ?
+        high    dd      ?
+     endl
 
-     mov    DWORD [ebp-20], eax
-     mov    eax, DWORD [ebp-4]
-     add    eax, 1
-     push   DWORD [ebp-8]
-     push   eax
-     call   grad
+     finit
+     fld    DWORD [x]
+     frndint
+     fistp  DWORD [x_int]
+     fld    DWORD [x]
+     fisub  DWORD [x_int]
+     fstp   [x_frac]
 
-     mov    DWORD [ebp-24], eax
-     mov    eax, DWORD [ebp-8]
-     add    eax, 1
-     push   eax
-     push   DWORD [ebp-4]
-     call   grad
+     fld    DWORD [y]
+     frndint
+     fistp  DWORD [y_int]
+     fld    DWORD [y]
+     fisub  DWORD [y_int]
+     fstp   [y_frac]
 
-     mov    DWORD [ebp-28], eax
-     mov    eax, DWORD [ebp-8]
-     lea    edx, [eax+1]
-     mov    eax, DWORD [ebp-4]
-     add    eax, 1
-     push   edx
-     push   eax
-     call   grad
+     stdcall grad, [x_int], [y_int]
+     mov    [s], eax
+     fild   [s]
+     fstp   [s]
 
-     mov    DWORD [ebp-32], eax
-     fild   DWORD [ebp-24]
-     fild   DWORD [ebp-20]
-     fxch   st1
-     push   DWORD [ebp-12]
-     lea    esp,  [esp-4]
-     fstp   DWORD [esp]
-     lea    esp,  [esp-4]
-     fstp   DWORD [esp]
-     call   smooth_inter
+     fld1
+     fiadd  [x_int]
+     fistp  [x_int1]
+     stdcall grad, [x_int1], [y_int]
+     mov    [t], eax
+     fild   [t]
+     fstp   [t]
 
-     fstp   DWORD [ebp-36]
-     fild   DWORD [ebp-32]
-     fild   DWORD [ebp-28]
-     fxch   st1
-     push   DWORD [ebp-12]
-     lea    esp,  [esp-4]
-     fstp   DWORD [esp]
-     lea    esp,  [esp-4]
-     fstp   DWORD [esp]
-     call   smooth_inter
+     fld1
+     fiadd  [y_int]
+     fistp  [y_int1]
+     stdcall grad, [x_int], [y_int1]
+     mov    [u], eax
+     fild   [u]
+     fstp   [u]
 
-     fstp   DWORD [ebp-40]
-     push   DWORD [ebp-16]
-     push   DWORD [ebp-40]
-     push   DWORD [ebp-36]
-     call   smooth_inter
-     add    esp,  52
+     stdcall grad, [x_int1], [y_int1]
+     mov    [v], eax
+     fild   [v]
+     fstp   [v]
+
+
+     stdcall   smooth_inter, [s], [t], [x_frac]
+     mov    [low], eax
+
+     stdcall   smooth_inter, [u], [v], [x_frac]
+     mov    [high], eax
+
+     stdcall   smooth_inter, [low], [high], [y_frac]
      ret
 endp
 
-;;   return value on fpu stack
 proc perlin2d,\
-     x, y, freq, depth
-     sub    esp, 32
-     fld    DWORD [x]
-     fmul   DWORD [freq]
-     fstp   DWORD [ebp-4]
-     fld    DWORD [y]
-     fmul   DWORD [freq]
-     fstp   DWORD [ebp-8]
-     fld1
-     fstp   DWORD [ebp-12]
-     fldz
-     fstp   DWORD [ebp-16]
-     fldz
-     fstp   DWORD [ebp-20]
-     mov    DWORD [ebp-24], 0
+     x, y, frequency, depth
+
+     locals
+        xa          dd      ?
+        ya          dd      ?
+        amplitude   dd      1.0
+        fin         dd      0.0
+        divide      dd      0.0
+        i           dd      0
+     endl
+
+     finit
+     fld   [x]
+     fmul  [frequency]
+     fstp  [xa]
+
+     fld   [y]
+     fmul  [frequency]
+     fstp  [ya]
+
      jmp .for_cmp
 
 .for_body:
-     fld    DWORD [ebp-12]
-     fld    DWORD [thfs]
-     fmulp  st1, st
-     fld    DWORD [ebp-20]
-     faddp  st1, st
-     fstp   DWORD [ebp-20]
-     push   DWORD [ebp-8]
-     push   DWORD [ebp-4]
-     call   noise2d
+     fld    DWORD [amplitude]
+     fmul   DWORD [thfs]
+     fadd   DWORD [divide]
+     fstp   DWORD [divide]
 
-     fmul   DWORD [ebp-12]
-     fld    DWORD [ebp-16]
-     faddp  st1, st
-     fstp   DWORD [ebp-16]
-     fld    DWORD [ebp-12]
-     fld    DWORD [two]
-     fdivp  st1, st
-     fstp   DWORD [ebp-12]
-     fld    DWORD [ebp-4]
-     fadd   st, st0
-     fstp   DWORD [ebp-4]
-     fld    DWORD [ebp-8]
-     fadd   st, st0
-     fstp   DWORD [ebp-8]
-     add    DWORD [ebp-24], 1
+     stdcall noise2d, [xa], [ya]
+     push   eax
+     fld    DWORD [esp]
+     pop    eax
+     fmul   [amplitude]
+     fadd   [fin]
+     fstp   [fin]
+
+     fld    [amplitude]
+     fdiv   [two]
+     fstp   [amplitude]
+
+     fld    [xa]
+     fmul   [two]
+     fstp   [xa]
+
+     fld    [ya]
+     fdiv   [two]
+     fstp   [ya]
+
+     add    [i], 1
 .for_cmp:
-     mov    eax, DWORD [ebp-24]
+     mov    eax, DWORD [i]
      cmp    eax, DWORD [depth]
      jl .for_body
 
-     fld    DWORD [ebp-16]
-     fdiv   DWORD [ebp-20]
-     add    esp,  32
+     fld    DWORD [fin]
+     fdiv   DWORD [divide]
+
+     push   eax
+     fstp   DWORD [esp]
+     pop    eax
      ret
 endp

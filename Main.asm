@@ -89,8 +89,8 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
 
 .Destroy:
     comcall [pD3D], IDirect3D9, Release
-    comcall [pD3DDevice], IDirect3DDevice9, Release
-    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+;    comcall [pD3DDevice], IDirect3DDevice9, Release
+;    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
     invoke  ExitProcess, ebx
 .ReturnZero:
         xor     eax, eax
@@ -116,18 +116,25 @@ data import
         library kernel32, 'kernel32.dll',\
                 gdi32,    'gdi32.dll',\
                 user32,   'user32.dll',\
-                d3d9,     'd3d9.dll',\
-                d3dx9,    'd3dx9_25.dll'
+                d3d9,     'd3d9.dll'
 
         include 'api\kernel32.inc'
         include 'api\gdi32.inc'
         include 'api\user32.inc'
         include '%myinclude%\API\d3d9.inc'
-        include '%myinclude%\API\d3dx9.inc'
         
         include '%myinclude%\EQUATES\d3d9.inc'
 
 end data
+
+
+
+;EyeV     dd      ?
+;AtV      dd      ?
+;UpV      dd      ?
+
+;fovY     dd      ?
+;Aspect   dd      ?
 
 
 ;ToScreenCoordinates     w       0       0               0
@@ -184,7 +191,7 @@ struct D3DVECTOR
        z        dd      ?
 ends
 
-vecEye          D3DVECTOR               0.0, 0.0, -30.0
+vecEye          D3DVECTOR               0.0, 0.0, -5.0
 vecAt           D3DVECTOR               0.0, 0.0, 0.0
 vecUp           D3DVECTOR               0.0, 1.0, 0.0
 
@@ -210,3 +217,12 @@ TVertex.FVF = D3DFVF_XYZRHW or D3DFVF_DIFFUSE
 ;                xaxis.y           yaxis.y           zaxis.y           0
 ;                xaxis.z           yaxis.z           zaxis.z           0
 ;                -dot(xaxis, eye)  -dot(yaxis, eye)  -dot(zaxis, eye)  1
+
+VertexCountInLine = 10
+VertexCount       = VertexCountInLine * VertexCountInLine
+XVertexCount      = VertexCountInLine - 1
+YVertexCount      = VertexCountInLine - 1
+
+TriangleCount  = XVertexCount * YVertexCount * 2
+XTriangleCount = (TriangleCount / 2)
+YTriangleCount = (TriangleCount / 2)

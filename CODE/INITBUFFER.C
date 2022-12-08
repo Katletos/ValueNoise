@@ -20,11 +20,11 @@ endp
 proc InitVBuffer
     lea        edx, [pVBuffer]
     comcall    [pD3DDevice], IDirect3DDevice9, CreateVertexBuffer,\
-                                               sizeof.TVertex * 100, D3DUSAGE_WRITEONLY,\ ;vertexcount=  100
+                                               sizeof.TVertex * VertexCount, D3DUSAGE_WRITEONLY,\ ;vertexcount=  100
                                                TVertex.FVF, D3DPOOL_DEFAULT, edx, nil
     lea        edx, [pVBufData]  ;is *pBufData point to mem in videocard?  write vertexes into pBufData
     comcall    [pVBuffer], IDirect3DVertexBuffer9, Lock,\
-                                                   0, sizeof.TVertex * 100, edx,\            ;vertexcount = 100
+                                                   0, sizeof.TVertex * VertexCount, edx,\            ;vertexcount = 100
                                                    D3DLOCK_DISCARD
     stdcall    WriteVertexes
 
@@ -38,7 +38,7 @@ proc  WriteVertexes
         yoff    dd      ?
         x       dd      ?
         y       dd      ?
-        cock    dd      ?
+        noise   dd      ?
     endl
 
     mov     edx, [pVBufData]
@@ -68,23 +68,23 @@ proc  WriteVertexes
     fld1
     fstp    DWORD [edx + TVertex.rhw]
 
-   ; mov     eax, [two]
-   ; mov     ecx, [two]
-    ;stdcall perlin2d, eax, ecx, [freq], [depth]
-    stdcall  Random.GetFloat
+  ;  mov     eax, [two]
+  ;  mov     ecx, [two]
+    stdcall perlin2d, eax, ecx, [freq], [depth]
+ ;   stdcall  Random.GetFloat
     push    eax
     fld     DWORD [esp]
     fmul    [F255]
     fistp   DWORD [esp]
     pop     eax
-    mov     ecx, eax
-    shl     ecx, 8
-    add     eax, ecx
-    shl     ecx, 8
-    add     eax, ecx
-    or      eax, $00000000
+ ;   mov     ecx, eax
+ ;   shl     ecx, 8
+ ;   add     eax, ecx
+ ;   shl     ecx, 8
+ ;   add     eax, ecx
+ ;   or      eax, $00000000
 
-    mov     DWORD [edx + TVertex.color], $FFFFFFFF
+    mov     DWORD [edx + TVertex.color], eax
 
     add     edx, sizeof.TVertex
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -110,14 +110,14 @@ endp
 proc InitIBuffer
      lea        edx, [pIBuffer]
      comcall    [pD3DDevice], IDirect3DDevice9, CreateIndexBuffer,\
-                                                4*162*3*2, 0,\
+                                                4*TriangleCount*3, 0,\
                                                 D3DFMT_INDEX32, D3DPOOL_MANAGED, edx, 0
      cmp        eax, 0
      jne        0
 
      lea        edx, [pIBufData]
      comcall    [pIBuffer], IDirect3DIndexBuffer9, Lock,\
-                                                    0, 4*162*3*2, edx,\   ;vertexcount = 100
+                                                    0, 4*TriangleCount*3, edx,\   ;vertexcount = 100
                                                     D3DLOCK_DISCARD
      cmp        eax, 0
      jne        0
@@ -135,7 +135,6 @@ proc WriteIndexes
 
      mov        edx, [pIBufData]
      xor        eax, eax
-     ;jmp        .penis2
      mov        [x], 0
      jmp .WhileCmp
 .WhileBody:
@@ -159,14 +158,10 @@ proc WriteIndexes
      add        [x], 1
 
 .WhileCmp:
-     cmp        [x], 81
+     cmp        [x], XTriangleCount
      jle  .WhileBody
-     ;jmp .fuck
-.penis2:
-;;;;;;;;;;;
- ;    mov        edx, [pIBufData]
-     ;xor        eax, eax
-     ;jmp         .fuck
+
+
      mov        [x], 1
      jmp .WhileCmp1
 .WhileBody1:
@@ -190,8 +185,10 @@ proc WriteIndexes
      add        [x], 1
 
 .WhileCmp1:
-     cmp        [x], 82;81
+     cmp        [x], XTriangleCount + 1;81
      jl  .WhileBody1
-.fuck:
+.penis:
      ret
 endp
+
+

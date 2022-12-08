@@ -1,3 +1,5 @@
+;x       dd      1.2
+;y       dd      2.3
 freq    dd      1.0
 depth   dd      4
 delta   dd      50.0
