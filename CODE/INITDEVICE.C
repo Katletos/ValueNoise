@@ -19,7 +19,7 @@ proc InitDevice
      fidiv      [rcClient.bottom]
      fstp       [fAspect]
 
-     invoke     D3DXMatrixPerspectiveFovLH, matProj, 1.57, [fAspect], 1.0, 1000.0
+     invoke     D3DXMatrixPerspectiveFovLH, matProj, 1.57, [fAspect], 1.0, 1000000.0
      comcall    [pD3DDevice], IDirect3DDevice9, SetTransform, D3DTS_PROJECTION, matProj
      ret
 endp

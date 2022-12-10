@@ -71,15 +71,13 @@ proc noise2d,\
 
      finit
      fld    DWORD [x]
-     frndint
-     fistp  DWORD [x_int]
+     fisttp  DWORD [x_int]
      fld    DWORD [x]
      fisub  DWORD [x_int]
      fstp   [x_frac]
 
      fld    DWORD [y]
-     frndint
-     fistp  DWORD [y_int]
+     fisttp  DWORD [y_int]
      fld    DWORD [y]
      fisub  DWORD [y_int]
      fstp   [y_frac]
@@ -159,15 +157,15 @@ proc perlin2d,\
      fstp   [fin]
 
      fld    [amplitude]
-     fdiv   [two]
+     fdiv   [F2]
      fstp   [amplitude]
 
      fld    [xa]
-     fmul   [two]
+     fmul   [F2]
      fstp   [xa]
 
      fld    [ya]
-     fdiv   [two]
+     fdiv   [F2]
      fstp   [ya]
 
      add    [i], 1

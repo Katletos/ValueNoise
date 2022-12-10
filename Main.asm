@@ -178,8 +178,8 @@ struct D3DVECTOR
        z        dd      ?
 ends
 
-vecEye          D3DVECTOR               0.0, 150.0, 0.0
-vecAt           D3DVECTOR               200.0, 0.0, 200.0
+vecEye          D3DVECTOR               0.0, 500.0, 0.0
+vecAt           D3DVECTOR               500.0, 0.0, 500.0
 vecUp           D3DVECTOR               0.0, 1.0, 0.0
 
 matWorld        D3DMATRIX

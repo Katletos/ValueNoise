@@ -72,6 +72,21 @@ proc  WriteVertexes
     pop     eax
     mov     [edx + TVertex.z], eax
 
+
+
+    push [x]
+    fild DWORD [esp]
+    fmul [NoiseDelta]
+    fstp [xoff]
+    pop  eax
+
+
+    push [z]
+    fild Dword[esp]
+    fmul [NoiseDelta]
+    fstp [zoff]
+    pop  eax
+   ; stdcall perlin2d, [xoff], [zoff], [freq], [depth]
     stdcall perlin2d, [xoff], [zoff], [freq], [depth]
     mov     [noise], eax
     push    eax
