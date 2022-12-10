@@ -20,11 +20,12 @@ endp
 proc InitVBuffer
     lea        edx, [pVBuffer]
     comcall    [pD3DDevice], IDirect3DDevice9, CreateVertexBuffer,\
-                                               sizeof.TVertex * VertexCount, D3DUSAGE_WRITEONLY,\ ;vertexcount=  100
-                                               TVertex.FVF, D3DPOOL_DEFAULT, edx, nil
+                                               sizeof.TVertex * VertexCount,\
+                                               D3DUSAGE_WRITEONLY, TVertex.FVF,\
+                                               D3DPOOL_DEFAULT, edx, nil
     lea        edx, [pVBufData]  ;is *pBufData point to mem in videocard?  write vertexes into pBufData
     comcall    [pVBuffer], IDirect3DVertexBuffer9, Lock,\
-                                                   0, sizeof.TVertex * VertexCount, edx,\            ;vertexcount = 100
+                                                   ebx, sizeof.TVertex * VertexCount, edx,\            ;vertexcount = 100
                                                    D3DLOCK_DISCARD
     stdcall    WriteVertexes
 
@@ -35,9 +36,9 @@ endp
 proc  WriteVertexes
     locals
         xoff    dd      ?
-        yoff    dd      ?
+        zoff    dd      ?
         x       dd      ?
-        y       dd      ?
+        z       dd      ?
         noise   dd      ?
     endl
 
@@ -50,59 +51,66 @@ proc  WriteVertexes
     jmp .x_for_cmp
 .x_for_body:
     fldz
-    fstp    DWORD [yoff]
-    mov     DWORD [y], 0
+    fstp    DWORD [zoff]
+    mov     DWORD [z], 0
     jmp .y_for_cmp
 .y_for_body:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    mov     eax, [xoff]
+    mov     eax, [x]
+    push    eax
+    fild    DWORD [esp]
+    fmul    [VertexDelta]
+    fstp    DWORD [esp]
+    pop     eax
     mov     [edx + TVertex.x], eax
 
-    mov     ecx, [yoff]
-    mov     [edx + TVertex.y], ecx
-
-    ;stdcall perlin2d, eax, ecx, [freq], [depth]
-    fld1
-    fstp    DWORD [edx + TVertex.z]
-
-    fld1
-    fstp    DWORD [edx + TVertex.rhw]
-
-  ;  mov     eax, [two]
-  ;  mov     ecx, [two]
-    stdcall perlin2d, eax, ecx, [freq], [depth]
- ;   stdcall  Random.GetFloat
+    mov     eax, [z]
     push    eax
+    fild    DWORD [esp]
+    fmul    [VertexDelta]
+    fstp    DWORD [esp]
+    pop     eax
+    mov     [edx + TVertex.z], eax
+
+    stdcall perlin2d, [xoff], [zoff], [freq], [depth]
+    mov     [noise], eax
+    push    eax
+    fld     DWORD [esp]
+    fmul    [FHeight]
+    fstp    DWORD [esp]
+    pop     eax
+    mov     DWORD [edx + TVertex.y], eax
+
+    push    [noise]
     fld     DWORD [esp]
     fmul    [F255]
     fistp   DWORD [esp]
     pop     eax
- ;   mov     ecx, eax
- ;   shl     ecx, 8
- ;   add     eax, ecx
- ;   shl     ecx, 8
- ;   add     eax, ecx
- ;   or      eax, $00000000
+    mov     ecx, eax
+    shl     ecx, 8
+    add     eax, ecx
+    shl     ecx, 8
+    add     eax, ecx
 
-    mov     DWORD [edx + TVertex.color], eax
+    mov     DWORD [edx + TVertex.color],$FFFFFFFF; eax
 
     add     edx, sizeof.TVertex
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    fld     DWORD [yoff]
-    fld     DWORD [delta]
+    fld     DWORD [zoff]
+    fld     DWORD [NoiseDelta]
     faddp   st1, st
-    fstp    DWORD [yoff]
-    add     DWORD [y], 1
+    fstp    DWORD [zoff]
+    add     DWORD [z], 1
 .y_for_cmp:
-    cmp     DWORD [y], 9
+    cmp     DWORD [z], ZVertexCount - 1
     jle .y_for_body
     fld     DWORD [xoff]
-    fld     DWORD [delta]
+    fld     DWORD [NoiseDelta]
     faddp   st1, st
     fstp    DWORD [xoff]
     add     DWORD [x], 1
 .x_for_cmp:
-    cmp     DWORD [x], 9
+    cmp     DWORD [x], XVertexCount - 1
     jle .x_for_body
     ret
 endp
@@ -110,17 +118,12 @@ endp
 proc InitIBuffer
      lea        edx, [pIBuffer]
      comcall    [pD3DDevice], IDirect3DDevice9, CreateIndexBuffer,\
-                                                4*TriangleCount*3, 0,\
-                                                D3DFMT_INDEX32, D3DPOOL_MANAGED, edx, 0
-     cmp        eax, 0
-     jne        0
-
+                                                4*3*TriangleCount, ebx,\
+                                                D3DFMT_INDEX32, D3DPOOL_MANAGED, edx, ebx
      lea        edx, [pIBufData]
      comcall    [pIBuffer], IDirect3DIndexBuffer9, Lock,\
-                                                    0, 4*TriangleCount*3, edx,\   ;vertexcount = 100
+                                                    ebx, 4*3*TriangleCount, edx,\   ;vertexcount = 100
                                                     D3DLOCK_DISCARD
-     cmp        eax, 0
-     jne        0
      stdcall    WriteIndexes
      comcall    [pIBuffer], IDirect3DIndexBuffer9, Unlock
      ret
@@ -146,19 +149,19 @@ proc WriteIndexes
      add        ecx, 1
      mov        DWORD [edx + eax * 4 + 4], ecx
 
-     add        ecx, 9
+     add        ecx, ZVertexCount - 1
      mov        DWORD [edx + eax * 4 + 8], ecx
 
      add        eax, 3
      add        [x], 1
      add        [i], 1
 .ForCmp:
-     cmp        [i], 9
+     cmp        [i], ZVertexCount - 1
      jl  .ForBody
      add        [x], 1
 
 .WhileCmp:
-     cmp        [x], XTriangleCount
+     cmp        [x], TriangleCount / 2  ;;;;;;
      jle  .WhileBody
 
 
@@ -170,7 +173,7 @@ proc WriteIndexes
      mov        ecx, [x]
      mov        [edx + eax * 4 + 0], ecx
 
-     add        ecx, 10
+     add        ecx, ZVertexCount
      mov        [edx + eax * 4 + 4], ecx
 
      add        ecx, -1
@@ -180,12 +183,12 @@ proc WriteIndexes
      add        [x], 1
      add        [i], 1
 .ForCmp1:
-     cmp        [i], 9
+     cmp        [i], ZVertexCount - 1
      jl  .ForBody1
      add        [x], 1
 
 .WhileCmp1:
-     cmp        [x], XTriangleCount + 1;81
+     cmp        [x], 1 + TriangleCount / 2
      jl  .WhileBody1
 .penis:
      ret

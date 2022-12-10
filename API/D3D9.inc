@@ -1,6 +1,16 @@
 import    d3d9,\
           Direct3DCreate9, 'Direct3DCreate9'
 
+import    d3dx9,\
+          D3DXMatrixIdentity, 'D3DXMatrixIdentity',\
+          D3DXMatrixTranslation, 'D3DXMatrixTranslation',\
+          D3DXMatrixScaling, 'D3DXMatrixScaling',\
+          D3DXMatrixRotationX, 'D3DXMatrixRotationX',\
+          D3DXMatrixRotationY, 'D3DXMatrixRotationY',\
+          D3DXMatrixRotationZ, 'D3DXMatrixRotationZ',\
+          D3DXMatrixLookAtLH, 'D3DXMatrixLookAtLH',\
+          D3DXMatrixPerspectiveFovLH, 'D3DXMatrixPerspectiveFovLH'
+
 interface IDirect3D9,\
           QueryInterface,\
           AddRef,\
@@ -172,3 +182,4 @@ interface IDirect3DIndexBuffer9,\
           Lock,\
           Unlock,\
           GetDesc
+

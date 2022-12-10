@@ -177,3 +177,15 @@ D3DLOCK_NO_DIRTY_UPDATE                 = $00008000
 
 D3DFMT_INDEX16              =101
 D3DFMT_INDEX32              =102
+
+
+D3DRS_LIGHTING = 137
+D3DRS_CULLMODE = 22
+
+D3DCULL_NONE            = 1
+D3DCULL_CW              = 2
+D3DCULL_CCW             = 3
+
+D3DTS_VIEW              = 2
+D3DTS_PROJECTION        = 3
+D3DTS_WORLD             = 256

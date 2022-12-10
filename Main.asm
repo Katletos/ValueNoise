@@ -10,6 +10,11 @@ proc WinMain
                              WS_POPUP or WS_VISIBLE or WS_MAXIMIZE,\
                              ebx, ebx, ebx, ebx, ebx, ebx, ebx, ebx
     mov     [hwndDesc], eax
+    lea     edx, [rcClient]
+    invoke  GetClientRect, eax, edx
+
+invoke     GetTickCount
+xchg       esi, eax
     ;;;;;;;;;;;;;;;;;;;;;;;;
     stdcall    InitDevice
     stdcall    InitRandomData
@@ -46,10 +51,10 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
     jmp     .Return
 
 .Create:
-;    call    InitDevice
-;    call    InitRandomData
-;    call    InitVBuffer
-
+   ; stdcall    InitDevice
+   ; stdcall    InitRandomData
+   ; stdcall    InitVBuffer
+   ; stdcall    InitIBuffer
     jmp     .ReturnZero
 .Paint:
     call    Paint
@@ -69,28 +74,29 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
     jne     .ReturnZero
 
 .Left:
-    finit
-    fld     [freq]
-    fsub    [delta]
-    fst     [freq]
+ ;   finit
+ ;   fld     [freq]
+ ;   fsub    [NoiseDelta]
+ ;   fst     [freq]
     jmp     .ReturnZero
 .Up:
-    add     [depth], 1
+ ;   add     [depth], 1
     jmp     .ReturnZero
 .Right:
-    finit
-    fld     [freq]
-    fadd    [delta]
-    fst     [freq]
+ ;   finit
+ ;   fld     [freq]
+ ;   fadd    [NoiseDelta]
+ ;   fst     [freq]
     jmp     .ReturnZero
 .Down:
-    sub     [depth], 1
+ ;   sub     [depth], 1
     jmp     .ReturnZero
 
 .Destroy:
     comcall [pD3D], IDirect3D9, Release
-;    comcall [pD3DDevice], IDirect3DDevice9, Release
-;    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+    comcall [pD3DDevice], IDirect3DDevice9, Release
+    comcall [pVBuffer], IDirect3DVertexBuffer9, Release
+    comcall [pIBuffer], IDirect3DIndexBuffer9, Release
     invoke  ExitProcess, ebx
 .ReturnZero:
         xor     eax, eax
@@ -98,7 +104,7 @@ proc DemoWindow.WindowProc uses ebx esi edi,\
         ret
 endp
 
-
+rcClient        RECT    ?
 hwndDesc        dd      ?
 Msg             MSG
 
@@ -116,7 +122,8 @@ data import
         library kernel32, 'kernel32.dll',\
                 gdi32,    'gdi32.dll',\
                 user32,   'user32.dll',\
-                d3d9,     'd3d9.dll'
+                d3d9,     'd3d9.dll',\
+                d3dx9,    'd3dx9_25.dll'
 
         include 'api\kernel32.inc'
         include 'api\gdi32.inc'
@@ -126,25 +133,6 @@ data import
         include '%myinclude%\EQUATES\d3d9.inc'
 
 end data
-
-
-
-;EyeV     dd      ?
-;AtV      dd      ?
-;UpV      dd      ?
-
-;fovY     dd      ?
-;Aspect   dd      ?
-
-
-;ToScreenCoordinates     w       0       0               0
-;                        0       h       0               0
-;                        0       0       zf/(zf-zn)      1
-;                        0       0       -zn*zf/(zf-zn)  0
-
-;h = ctg(fovY/2)
-;w = h / Aspect
-
 
 ImageBase = $ - rva $
 nil       = 0
@@ -181,7 +169,6 @@ struct TVertex
        x        dd      ?
        y        dd      ?
        z        dd      ?
-       rhw      dd      ?
        color    dd      ?
 ends
 
@@ -191,38 +178,30 @@ struct D3DVECTOR
        z        dd      ?
 ends
 
-vecEye          D3DVECTOR               0.0, 0.0, -5.0
-vecAt           D3DVECTOR               0.0, 0.0, 0.0
+vecEye          D3DVECTOR               0.0, 150.0, 0.0
+vecAt           D3DVECTOR               200.0, 0.0, 200.0
 vecUp           D3DVECTOR               0.0, 1.0, 0.0
 
 matWorld        D3DMATRIX
 matView         D3DMATRIX
 matProj         D3DMATRIX
 
-;Quad           TVertex                 100.0, 100.0, 0.0, 1.0
-;               TVertex                 200.0, 100.0, 0.0, 1.0
-;               TVertex                 200.0, 200.0, 0.0, 1.0
-;               TVertex                 200.0, 200.0, 0.0, 1.0
-;               TVertex                 100.0, 200.0, 0.0, 1.0
-;               TVertex                 100.0, 100.0, 0.0, 1.0
+TVertex.FVF = D3DFVF_XYZ or D3DFVF_DIFFUSE
 
 
-TVertex.FVF = D3DFVF_XYZRHW or D3DFVF_DIFFUSE
+Divisor         dd      1000
+tmNow           dd      ?
+fAngle          dd      ?
 
-;zaxis = normal(At – Eye)
-;xaxis = normal(cross(Up, zaxis))
-;yaxis = cross(zaxis, xaxis)
 
-;WorldAxis       xaxis.x           yaxis.x           zaxis.x           0
-;                xaxis.y           yaxis.y           zaxis.y           0
-;                xaxis.z           yaxis.z           zaxis.z           0
-;                -dot(xaxis, eye)  -dot(yaxis, eye)  -dot(zaxis, eye)  1
+XTriangles      dd      ?
+YTriangles      dd      ?
 
-VertexCountInLine = 10
-VertexCount       = VertexCountInLine * VertexCountInLine
-XVertexCount      = VertexCountInLine - 1
-YVertexCount      = VertexCountInLine - 1
+Xvertexes       dd      ?
+YVertexes       dd      ?
 
-TriangleCount  = XVertexCount * YVertexCount * 2
-XTriangleCount = (TriangleCount / 2)
-YTriangleCount = (TriangleCount / 2)
+XVertexCount      = 100
+ZVertexCount      = 100
+VertexCount       = XVertexCount * ZVertexCount
+
+TriangleCount  = (XVertexCount - 1) * (ZVertexCount - 1) * 2
